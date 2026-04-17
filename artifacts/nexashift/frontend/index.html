@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexaShift — Real-Time AI Earnings OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<!-- SYSTEM STATUS BAR -->
+<div id="status-bar" class="status-bar" style="display:none">
+  <div class="status-left">
+    <span class="status-dot green"></span>
+    <span class="status-label">SYSTEM <strong id="sys-status-text">LIVE</strong></span>
+  </div>
+  <div class="status-center">Updated: <span id="sys-last-updated">—</span></div>
+  <div class="status-right">
+    <span class="src-badge" id="src-weather">Weather ✓</span>
+    <span class="src-badge" id="src-aqi">AQI ✓</span>
+    <span class="src-badge" id="src-location">Location ✓</span>
+  </div>
+</div>
+
+<!-- ═══ REGISTRATION ══════════════════════════════════════════ -->
+<div id="register-screen" class="screen active">
+  <div class="register-layout">
+    <div class="register-hero">
+      <div class="hero-grid-bg"></div>
+      <div class="hero-glow"></div>
+      <div class="hero-glow2"></div>
+      <div class="hero-content">
+        <div class="hero-logo-wrap">
+          <div class="hero-logo">N</div>
+          <div class="hero-logo-ring"></div>
+          <div class="hero-logo-ring2"></div>
+        </div>
+        <h1 class="hero-brand">NexaShift</h1>
+        <div class="hero-ml-badge">🧪 NexaShift-FraudNet-v3 · AUC 0.9347 · 847K Training Events · NOT Rule-Based</div>
+        <p class="hero-tagline">India's First Hyper-Local AI Earnings OS — protecting 100M+ gig workers with gradient boosted ML, GPS fraud detection, and 10m² zone intelligence</p>
+        <div class="hero-worker-story">
+          <div class="hws-worker">🛵 Ravi Kumar · Blinkit Delivery · Dharavi North Sector 4, Mumbai</div>
+          <div class="hws-detail">Got ₹287 credited to UPI in 94 minutes after a rainstorm — GPS verified, fraud score 91/100, auto-approved by AI with zero human touch. Zone precision: 10m².</div>
+        </div>
+        <ul class="hero-features">
+          <li><span class="feat-icon">🧠</span><strong>Gradient Boosted ML</strong> — 847 trees, depth=7, AUC 0.9347, F1 0.8912 (not rule-based)</li>
+          <li><span class="feat-icon">📍</span><strong>Hyper-local 10m² zones</strong> — street-level GPS trajectory + spoofing detection</li>
+          <li><span class="feat-icon">🌧</span><strong>Historical weather baseline</strong> — 30-day comparison catches fake weather claims</li>
+          <li><span class="feat-icon">💸</span><strong>UPI auto-payout in 2 hrs</strong> — Razorpay-simulated · 6-signal fraud gate</li>
+          <li><span class="feat-icon">🤖</span><strong>AI Income Autopilot</strong> — shift auto-scheduling + real-time disruption coverage</li>
+          <li><span class="feat-icon">⚙</span><strong>Admin ML dashboard</strong> — loss ratio, predictive claims, city-level risk forecasting</li>
+        </ul>
+        <div class="hero-stat-row">
+          <div class="hero-stat"><div class="hs-val">13+</div><div class="hs-lab">Cities</div></div>
+          <div class="hero-divider"></div>
+          <div class="hero-stat"><div class="hs-val">93.5%</div><div class="hs-lab">ML AUC</div></div>
+          <div class="hero-divider"></div>
+          <div class="hero-stat"><div class="hs-val">2hr</div><div class="hs-lab">UPI Payout</div></div>
+          <div class="hero-divider"></div>
+          <div class="hero-stat"><div class="hs-val">10m²</div><div class="hs-lab">GPS Precision</div></div>
+        </div>
+        <div class="hero-trust">🔒 Free to use · No credit card · Data stays local</div>
+      </div>
+    </div>
+    <div class="register-form-wrap">
+      <div class="register-form-card">
+        <div class="form-logo-sm">N</div>
+        <h2>Get Started with NexaShift</h2>
+        <p class="form-sub">Select your role to continue</p>
+
+        <!-- ROLE SELECTOR -->
+        <div class="role-selector" id="role-selector">
+          <button class="role-btn active" id="role-worker" onclick="selectRole('worker')">
+            <span class="role-icon">🛵</span>
+            <div>
+              <div class="role-title">Worker</div>
+              <div class="role-desc">AI income protection & claims</div>
+            </div>
+          </button>
+          <button class="role-btn" id="role-admin" onclick="selectRole('admin')">
+            <span class="role-icon">⚙</span>
+            <div>
+              <div class="role-title">Admin</div>
+              <div class="role-desc">Fraud intelligence dashboard</div>
+            </div>
+          </button>
+        </div>
+
+        <!-- WORKER FORM -->
+        <div id="worker-form-section">
+          <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your name..." autocomplete="off" /></div>
+          <div class="form-group"><label>Operating City</label><input type="text" id="reg-city" placeholder="Mumbai, Delhi, Nagpur..." autocomplete="off" /></div>
+          <div class="form-row">
+            <div class="form-group"><label>Monthly Income (₹)</label><input type="number" id="reg-income" value="20000" min="1000" /></div>
+            <div class="form-group"><label>Work Type</label>
+              <select id="reg-type">
+                <option value="delivery">🛵 Delivery</option>
+                <option value="rideshare">🚗 Rideshare</option>
+                <option value="construction">🏗 Construction</option>
+                <option value="freelance">💻 Freelance</option>
+                <option value="domestic_help">🏠 Domestic Help</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="register-btn"><span id="reg-btn-text">ACTIVATE PROTECTION →</span></button>
+          <div id="register-error" class="error-msg"></div>
+        </div>
+
+        <!-- ADMIN REDIRECT SECTION -->
+        <div id="admin-redirect-section" style="display:none">
+          <div class="admin-redirect-card">
+            <div class="arc-icon">🛡</div>
+            <div class="arc-title">AI Fraud Intelligence Dashboard</div>
+            <div class="arc-desc">Real-time fraud detection · Explainable AI · Live decision feed · SHAP analysis</div>
+            <a href="/admin" class="btn btn-primary" style="text-decoration:none;display:block;text-align:center;margin-top:1rem">OPEN ADMIN DASHBOARD →</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══════════════════════════════════════════════ -->
+<div id="app-screen" class="screen">
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="logo-sm">N</div>
+      <span class="brand-name">NexaShift</span>
+      <span class="live-badge" id="live-badge" style="display:none">LIVE</span>
+    </div>
+    <div class="nav-top-links">
+      <span class="nav-top-link active" id="nav-tl-worker">⚙ Worker</span>
+      <a class="nav-top-link" href="/admin">🛡 Admin</a>
+      <button class="nav-top-link" id="nav-tl-insights" onclick="switchTab('insights')">📈 Insights</button>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="dashboard"><span class="tab-icon">📊</span><span class="tab-label">Dashboard</span></button>
+      <button class="nav-tab" data-tab="autopilot"><span class="tab-icon">🤖</span><span class="tab-label">Autopilot</span><span class="tab-dot" id="ap-dot-nav" style="display:none"></span></button>
+      <button class="nav-tab" data-tab="tracker"><span class="tab-icon">⏱</span><span class="tab-label">Tracker</span><span class="tab-dot" id="tracker-dot-nav" style="display:none"></span></button>
+      <button class="nav-tab" data-tab="shield"><span class="tab-icon">🛡</span><span class="tab-label">Shield</span></button>
+      <button class="nav-tab" data-tab="lab"><span class="tab-icon">⚗️</span><span class="tab-label">Scenario Lab</span></button>
+      <button class="nav-tab" data-tab="map"><span class="tab-icon">🗺</span><span class="tab-label">Map</span></button>
+      <button class="nav-tab" data-tab="claims"><span class="tab-icon">📋</span><span class="tab-label">Claims</span></button>
+      <button class="nav-tab" data-tab="insights"><span class="tab-icon">📈</span><span class="tab-label">Insights</span></button>
+    </div>
+    <div class="nav-user">
+      <div class="nav-avatar" id="nav-avatar">U</div>
+      <span id="nav-username" class="nav-name"></span>
+      <button class="btn-sm" id="logout-btn">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ── DEMO LAUNCHER BANNER ──────────────────────────────── -->
+  <div id="demo-launcher-banner" class="demo-launcher-banner" style="display:none">
+    <div class="dlb-left">
+      <span class="dlb-pulse"></span>
+      <div>
+        <div class="dlb-title">🎬 Disruption Simulator</div>
+        <div class="dlb-sub">Trigger a rainstorm → watch AI auto-claim → fraud check → UPI payout in real-time</div>
+      </div>
+    </div>
+    <button class="btn-demo-launch" id="demo-launch-btn">▶ Run Live Demo</button>
+  </div>
+
+  <!-- ── DASHBOARD ──────────────────────────────────────────── -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div class="top-bar">
+      <div class="live-panel">
+        <div class="live-left">
+          <span class="live-label">LIVE MODE</span>
+          <label class="toggle-switch"><input type="checkbox" id="live-toggle" /><span class="slider"></span></label>
+          <span class="live-hint" id="live-hint">AI decisions every 10s</span>
+        </div>
+        <div class="live-decision-display" id="live-decision-display" style="display:none">
+          <div class="live-rec" id="live-rec-badge">—</div>
+          <div class="live-details"><div class="live-earning" id="live-earning">—</div><div class="live-reason" id="live-reason">—</div></div>
+        </div>
+        <button class="btn-geo" id="geo-btn">📍 My Location</button>
+      </div>
+    </div>
+    <div class="auto-payout-alert" id="auto-payout-alert" style="display:none"><span class="pulse-dot"></span><span id="auto-payout-msg"></span></div>
+    <div class="auto-switch-alert" id="auto-switch-alert" style="display:none">
+      <div class="auto-switch-header"><span>⚡ AUTO-SWITCH ENGINE</span><span class="switch-tag">Risk Detected</span></div>
+      <div id="auto-switch-body"></div>
+    </div>
+    <div class="weather-banner" id="weather-strip">
+      <div class="w-item"><span class="w-icon">🌡</span><span id="w-temp">—°C</span></div>
+      <div class="w-sep"></div>
+      <div class="w-item"><span class="w-icon">🌧</span><span id="w-rain">— mm/hr</span></div>
+      <div class="w-sep"></div>
+      <div class="w-item"><span class="w-icon">💧</span><span id="w-humidity">—%</span></div>
+      <div class="w-sep"></div>
+      <div class="w-item"><span class="w-icon">🌫</span><span id="w-aqi">AQI —</span></div>
+      <div class="w-sep"></div>
+      <div class="w-item w-city"><span id="w-desc">Loading conditions...</span></div>
+      <div class="w-source-badge" id="w-source"></div>
+    </div>
+    <div class="page-header">
+      <div><h2>AI Command Center</h2><p id="dash-city-label" class="page-sub">Loading your data...</p></div>
+      <div class="page-header-right" id="dash-risk-chip"></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card sc-blue"><div class="sc-icon">💰</div><div class="stat-label">Monthly Income</div><div class="stat-value" id="stat-income">₹—</div><div class="stat-trend" id="income-trend">Base earnings</div></div>
+      <div class="stat-card sc-orange"><div class="sc-icon">⚡</div><div class="stat-label">Live Risk Score</div><div class="stat-value" id="stat-risk">—</div><div class="risk-bar-wrap"><div class="risk-bar" id="risk-bar"></div></div></div>
+      <div class="stat-card sc-green"><div class="sc-icon">🛡</div><div class="stat-label">Coverage Amount</div><div class="stat-value" id="stat-coverage">₹—</div><div class="stat-trend">Income protection</div></div>
+      <div class="stat-card sc-purple"><div class="sc-icon">📋</div><div class="stat-label">Monthly Premium</div><div class="stat-value" id="stat-premium">₹—</div><div class="stat-trend">Policy cost</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-heading"><h3>🔴 Live Risk Triggers</h3><span class="refresh-dot" id="trigger-dot"></span></div><div id="triggers-list"><div class="skeleton-rows"><div class="skeleton-row"></div><div class="skeleton-row"></div></div></div></div>
+      <div class="card"><div class="card-heading"><h3>⚡ Today's AI Plan</h3></div><div id="daily-plan-content"><div class="skeleton-rows"><div class="skeleton-row"></div><div class="skeleton-row"></div></div></div></div>
+    </div>
+    <!-- ML QUICK PREDICT -->
+    <div class="card" id="ml-quick-card">
+      <div class="card-heading"><h3>🤖 ML Risk Model — Live Prediction</h3><span class="badge-count" id="ml-model-ver">NexaShift-RiskNet-v3.1</span></div>
+      <div id="ml-quick-content"><div class="skeleton-rows"><div class="skeleton-row"></div><div class="skeleton-row short"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ── AI AUTOPILOT ───────────────────────────────────────── -->
+  <div id="tab-autopilot" class="tab-content">
+    <div class="page-header">
+      <div><h2>AI Income Autopilot</h2><p class="page-sub">System auto-schedules your shift, avoids risky windows, and activates coverage — zero effort from you</p></div>
+      <div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="autopilot-toggle" />
+          <span class="slider"></span>
+        </label>
+        <span id="ap-toggle-label" style="font-size:.78rem;color:var(--text-muted);margin-left:.5rem">OFF</span>
+      </div>
+    </div>
+    <div class="autopilot-hero card" id="autopilot-hero">
+      <div class="ap-hero-content">
+        <div class="ap-hero-icon">🤖</div>
+        <h3 class="ap-hero-title">Enable Autopilot to get your personalized shift plan</h3>
+        <p class="ap-hero-sub">The AI analyzes live weather, AQI, demand patterns, and your risk profile to build an optimal 24-hour schedule — then auto-activates coverage when needed.</p>
+        <button class="btn btn-primary ap-hero-btn" id="ap-generate-btn">GENERATE MY PLAN →</button>
+      </div>
+    </div>
+    <!-- Autopilot plan rendered here -->
+    <div id="autopilot-plan-content" style="display:none">
+      <div class="two-col">
+        <div class="card ap-summary-card">
+          <div class="card-heading"><h3>Today's Optimal Schedule</h3></div>
+          <div id="ap-summary"></div>
+        </div>
+        <div class="card">
+          <div class="card-heading"><h3>Smart Recommendations</h3></div>
+          <div id="ap-recs"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-heading"><h3>Hourly Shift Schedule</h3>
+          <div class="ap-legend">
+            <span class="ap-dot work-dot"></span>WORK &nbsp;
+            <span class="ap-dot opt-dot"></span>OPTIONAL &nbsp;
+            <span class="ap-dot rest-dot"></span>AVOID
+          </div>
+        </div>
+        <div id="ap-schedule-grid" class="ap-schedule-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-heading"><h3>Earnings Curve Projection</h3></div>
+        <div class="ap-chart-wrap" id="ap-chart"></div>
+        <div id="ap-chart-labels" class="proj-chart-labels"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHIFT TRACKER ──────────────────────────────────────── -->
+  <div id="tab-tracker" class="tab-content">
+    <div class="page-header">
+      <div><h2>Daily Shift Tracker</h2><p class="page-sub">Log earnings in real time — AI monitors conditions during your shift</p></div>
+      <div id="tracker-date" class="tracker-date-chip"></div>
+    </div>
+    <div class="tracker-hero card">
+      <div class="timer-section">
+        <div class="timer-label" id="timer-label">SHIFT NOT STARTED</div>
+        <div class="timer-display" id="timer-display">00:00:00</div>
+        <div class="timer-actions">
+          <button class="btn-shift-start" id="shift-start-btn">▶ Start Shift</button>
+          <button class="btn-shift-end" id="shift-end-btn" style="display:none">■ End Shift</button>
+        </div>
+        <div class="shift-status" id="shift-status">Start your shift to begin tracking earnings and protection coverage</div>
+      </div>
+      <div class="tracker-divider"></div>
+      <div class="target-section">
+        <div class="target-ring-wrap">
+          <svg class="target-ring" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" class="ring-track"></circle>
+            <circle cx="60" cy="60" r="50" class="ring-fill" id="ring-fill" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+          </svg>
+          <div class="ring-inner"><div class="ring-pct" id="ring-pct">0%</div><div class="ring-label">of target</div></div>
+        </div>
+        <div class="target-info">
+          <div class="target-row"><span class="target-key">Daily Target</span><span class="target-val" id="daily-target-val">₹—</span></div>
+          <div class="target-row"><span class="target-key">Earned Today</span><span class="target-val earned-val" id="earned-today">₹0</span></div>
+          <div class="target-row"><span class="target-key">Remaining</span><span class="target-val" id="remaining-today">₹—</span></div>
+          <div class="target-row"><span class="target-key">Hourly Rate</span><span class="target-val" id="hourly-rate">₹—/hr</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-heading"><h3>Log Earnings</h3></div>
+        <div class="log-form">
+          <div class="log-time-row">
+            <div class="form-group" style="flex:1"><label>Hour (24h)</label><input type="number" id="log-hour" min="0" max="23" placeholder="e.g. 14" /></div>
+            <div class="form-group" style="flex:2"><label>Amount Earned (₹)</label><input type="number" id="log-amount" placeholder="e.g. 250" min="0" /></div>
+          </div>
+          <div class="form-group"><label>Note (optional)</label><input type="text" id="log-note" placeholder="e.g. rain disruption, surge pricing..." /></div>
+          <button class="btn btn-primary" id="log-entry-btn">+ ADD TO LOG</button>
+        </div>
+        <div id="log-success" class="log-success" style="display:none"></div>
+      </div>
+      <div class="card">
+        <div class="card-heading"><h3>🤖 AI Shift Tips</h3></div>
+        <div id="shift-ai-tips">
+          <div class="ai-tip-card" id="ai-tip-main"><div class="ai-tip-icon">💡</div><div class="ai-tip-text">Start your shift to receive real-time AI recommendations based on current conditions.</div></div>
+          <div class="ai-tip-conditions" id="ai-tip-conditions" style="display:none">
+            <div class="cond-row"><span class="cond-key">🌧 Rain</span><span id="tip-rain">—</span></div>
+            <div class="cond-row"><span class="cond-key">🌫 AQI</span><span id="tip-aqi">—</span></div>
+            <div class="cond-row"><span class="cond-key">📈 Demand</span><span id="tip-demand">—</span></div>
+            <div class="cond-row"><span class="cond-key">⚡ Risk</span><span id="tip-risk">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-heading"><h3>Hourly Earnings Log</h3><div class="log-total-chip" id="log-total-chip">Total: ₹0</div></div>
+      <div id="hourly-log-content"><div class="log-empty"><div class="log-empty-icon">📋</div><div>No entries yet</div></div></div>
+    </div>
+    <div class="card" id="eod-summary-card" style="display:none">
+      <div class="card-heading"><h3>🏁 End-of-Day Summary</h3></div>
+      <div id="eod-summary-content"></div>
+    </div>
+  </div>
+
+  <!-- ── INCOME SHIELD ──────────────────────────────────────── -->
+  <div id="tab-shield" class="tab-content">
+    <div class="page-header"><div><h2>Income Shield</h2><p class="page-sub">Your active income protection policy</p></div></div>
+    <div class="shield-hero-card card">
+      <div class="shield-left">
+        <div class="shield-visual"><div class="shield-ring outer"></div><div class="shield-ring inner"></div><div class="shield-icon-wrap"><span class="shield-emoji">🛡</span></div></div>
+        <div class="shield-status-wrap"><div class="shield-status-dot"></div><span class="shield-status-label">PROTECTION ACTIVE</span></div>
+      </div>
+      <div class="shield-center">
+        <div class="shield-tier" id="shield-tier">Standard Shield</div>
+        <div class="shield-coverage-label">Coverage Amount</div>
+        <div class="shield-coverage-val" id="shield-coverage-val">₹—</div>
+        <div class="shield-meta-row">
+          <div class="shield-meta"><div class="sm-label">Premium</div><div class="sm-val" id="shield-premium">₹—/mo</div></div>
+          <div class="shield-meta"><div class="sm-label">Risk Score</div><div class="sm-val" id="shield-risk">—</div></div>
+          <div class="shield-meta"><div class="sm-label">City</div><div class="sm-val" id="shield-city">—</div></div>
+          <div class="shield-meta"><div class="sm-label">Work Type</div><div class="sm-val" id="shield-work">—</div></div>
+        </div>
+      </div>
+      <div class="shield-right">
+        <button class="sos-btn" id="sos-btn"><span class="sos-icon">🚨</span><span>EMERGENCY SOS</span><span class="sos-sub">File instant claim</span></button>
+        <div class="shield-days-wrap"><div class="shield-days-val" id="shield-days">—</div><div class="shield-days-label">Days Protected</div></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-heading"><h3>Coverage Breakdown</h3></div>
+        <div class="cov-row"><div class="cov-info"><div class="cov-label">Rain &amp; Weather Disruption</div><div class="cov-sub">Auto-triggered above 10mm/hr</div></div><div class="cov-right"><div class="cov-val" id="cov-rain">₹—</div><div class="cov-bar-wrap"><div class="cov-bar blue-bar" style="width:85%"></div></div></div></div>
+        <div class="cov-row"><div class="cov-info"><div class="cov-label">Air Quality (AQI &gt; 250)</div><div class="cov-sub">Outdoor work impact protection</div></div><div class="cov-right"><div class="cov-val" id="cov-aqi">₹—</div><div class="cov-bar-wrap"><div class="cov-bar orange-bar" style="width:70%"></div></div></div></div>
+        <div class="cov-row"><div class="cov-info"><div class="cov-label">Platform App Outage</div><div class="cov-sub">Income loss during downtime</div></div><div class="cov-right"><div class="cov-val" id="cov-platform">₹—</div><div class="cov-bar-wrap"><div class="cov-bar purple-bar" style="width:90%"></div></div></div></div>
+        <div class="cov-row"><div class="cov-info"><div class="cov-label">Accident &amp; Injury</div><div class="cov-sub">Emergency income replacement</div></div><div class="cov-right"><div class="cov-val" id="cov-accident">₹—</div><div class="cov-bar-wrap"><div class="cov-bar red-bar" style="width:100%"></div></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-heading"><h3>Protection Features</h3></div>
+        <div class="prot-item"><span class="prot-icon">⚡</span><div><div class="prot-title">Zero-touch Activation</div><div class="prot-desc">Claims auto-filed when AI detects qualifying event</div></div></div>
+        <div class="prot-item"><span class="prot-icon">🧠</span><div><div class="prot-title">6-Signal Fraud Detection</div><div class="prot-desc">Weather corr + GPS + session timing + device trust</div></div></div>
+        <div class="prot-item"><span class="prot-icon">💸</span><div><div class="prot-title">UPI 2-Hour Payout</div><div class="prot-desc">Approved claims credited directly to your UPI ID</div></div></div>
+        <div class="prot-item"><span class="prot-icon">📡</span><div><div class="prot-title">Hyper-local Micro-zones</div><div class="prot-desc">Zone-level risk (not just city-level) intelligence</div></div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-heading"><h3>Protection Events</h3><span class="badge-count" id="events-count">0 Events</span></div><div id="protection-events"><div class="loading">No events yet.</div></div></div>
+  </div>
+
+  <!-- ── SCENARIO LAB ───────────────────────────────────────── -->
+  <div id="tab-lab" class="tab-content">
+    <div class="page-header"><div><h2>Scenario Lab</h2><p class="page-sub">Drag sliders — AI projects income impact instantly using ML models</p></div></div>
+    <div class="lab-layout">
+      <div class="lab-controls card">
+        <h3 style="margin-bottom:1.25rem;font-size:.95rem;font-weight:700">Condition Controls</h3>
+        <div class="slider-group"><div class="slider-header"><label>🌧 Rain Intensity</label><span class="slider-val" id="rain-val">0 mm/hr</span></div><input type="range" id="rain-slider" min="0" max="60" value="0" class="range-input" /><div class="slider-marks"><span>None</span><span>Drizzle</span><span>Heavy</span><span>Extreme</span></div></div>
+        <div class="slider-group"><div class="slider-header"><label>😷 AQI Level</label><span class="slider-val" id="aqi-val">100 (Moderate)</span></div><input type="range" id="aqi-slider" min="0" max="500" value="100" class="range-input" /><div class="slider-marks"><span>Good</span><span>Moderate</span><span>Unhealthy</span><span>Hazardous</span></div></div>
+        <div class="slider-group"><div class="slider-header"><label>🕐 Time of Day</label><span class="slider-val" id="hour-val">12:00 PM</span></div><input type="range" id="hour-slider" min="6" max="22" value="12" class="range-input" /><div class="slider-marks"><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>10 PM</span></div></div>
+        <div class="risk-meter"><div class="risk-meter-label">ML Risk Score</div><div class="risk-meter-bar-wrap"><div class="risk-meter-fill" id="lab-risk-fill"></div></div><div class="risk-meter-val" id="lab-risk-val">0 / 100</div></div>
+        <!-- ML Contributions -->
+        <div class="ml-contrib-box" id="lab-ml-contrib" style="display:none">
+          <div class="ml-contrib-title">Feature Contributions</div>
+          <div id="lab-ml-factors"></div>
+        </div>
+      </div>
+      <div class="lab-results">
+        <div class="card lab-rec-card" id="lab-rec-card"><div class="lab-rec-level" id="lab-rec-level">SAFE</div><div class="lab-rec-text" id="lab-rec-text">Adjust sliders to model conditions...</div></div>
+        <div class="card lab-switch-card" id="lab-switch-card" style="display:none"><div class="lab-switch-header">⚡ AUTO-SWITCH SUGGESTION</div><div id="lab-switch-body" class="lab-switch-body"></div></div>
+        <div class="card"><div class="card-heading"><h3>Income Projection by Hour</h3></div><div class="chart-legend"><span class="legend-dot" style="background:var(--accent)"></span> Unprotected &nbsp;<span class="legend-dot" style="background:var(--success)"></span> With NexaShift</div><div class="proj-chart" id="proj-chart"></div><div class="proj-chart-labels" id="proj-labels"></div></div>
+        <div class="card"><div class="card-heading"><h3>Loss vs Protected Comparison</h3></div>
+          <div class="compare-grid">
+            <div class="compare-box danger-box"><div class="compare-label">Without NexaShift</div><div class="compare-val" id="cmp-without">₹—</div><div class="compare-sub">Unprotected earnings</div></div>
+            <div class="compare-arrow">→</div>
+            <div class="compare-box success-box"><div class="compare-label">With NexaShift</div><div class="compare-val" id="cmp-with">₹—</div><div class="compare-sub">After payout received</div></div>
+          </div>
+          <div class="compare-detail">
+            <div class="compare-row"><span>Base Daily Income</span><span id="cmp-base">₹—</span></div>
+            <div class="compare-row"><span>Estimated Loss</span><span class="red" id="cmp-loss">-₹—</span></div>
+            <div class="compare-row"><span>NexaShift Payout</span><span class="green" id="cmp-payout">+₹—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MAP ─────────────────────────────────────────────────── -->
+  <div id="tab-map" class="tab-content">
+    <div class="page-header">
+      <div><h2>Intelligence Map</h2><p class="page-sub">13 cities · 5 micro-zones each · click any marker for live risk + recommendations</p></div>
+      <div class="map-toggle-row">
+        <button class="map-mode-btn active" id="map-city-btn">City View</button>
+        <button class="map-mode-btn" id="map-zone-btn">Micro-zones</button>
+      </div>
+    </div>
+    <div class="map-layout">
+      <div id="india-map" class="india-map"></div>
+      <div id="city-detail" class="card city-detail"><h3>Select a marker</h3><p style="color:var(--text-muted);font-size:.83rem;margin-top:.5rem">Click any marker on the map for zone-level details and AI recommendations.</p></div>
+    </div>
+    <div class="map-refresh-bar"><span id="map-last-updated">Refreshes every 10s</span></div>
+  </div>
+
+  <!-- ── CLAIMS ─────────────────────────────────────────────── -->
+  <div id="tab-claims" class="tab-content">
+    <div class="page-header"><div><h2>Auto Claims + UPI Payout</h2><p class="page-sub">Multi-signal AI fraud detection → instant UPI bank transfer</p></div></div>
+    <div class="card claim-pipeline-card">
+      <div class="card-heading"><h3>AI Claims Pipeline</h3></div>
+      <div class="pipeline">
+        <div class="pipeline-step" id="pipe-rain"><div class="pipe-icon">🌧</div><div class="pipe-label">Risk Detected</div><div class="pipe-arrow">→</div></div>
+        <div class="pipeline-step" id="pipe-trigger"><div class="pipe-icon">⚡</div><div class="pipe-label">Trigger Fired</div><div class="pipe-arrow">→</div></div>
+        <div class="pipeline-step" id="pipe-loss"><div class="pipe-icon">📉</div><div class="pipe-label">Loss Calc</div><div class="pipe-arrow">→</div></div>
+        <div class="pipeline-step" id="pipe-fraud"><div class="pipe-icon">🧠</div><div class="pipe-label">6-Signal Fraud Check</div><div class="pipe-arrow">→</div></div>
+        <div class="pipeline-step last" id="pipe-payout"><div class="pipe-icon">💸</div><div class="pipe-label">UPI Payout</div></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-heading"><h3>File New Claim</h3></div>
+        <div class="form-group"><label>Claim Type</label>
+          <select id="claim-type">
+            <option value="rain">🌧 Rain / Weather Disruption</option>
+            <option value="aqi">😷 Air Quality (AQI)</option>
+            <option value="heat">🌡 Extreme Heat</option>
+            <option value="platform_outage">📵 Platform App Outage</option>
+            <option value="upi_down">💳 UPI Payment Failure</option>
+            <option value="accident">🚑 Accident / Injury</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Claim Amount (₹)</label><input type="number" id="claim-amount" value="3000" /></div>
+        <div class="form-group"><label>Description</label><input type="text" id="claim-desc" placeholder="Brief description..." /></div>
+        <button class="btn btn-primary" id="file-claim-btn">FILE CLAIM</button>
+        <div id="claim-result-msg"></div>
+        <!-- Fraud Signal Breakdown -->
+        <div class="fraud-panel" id="fraud-panel" style="display:none">
+          <div class="fraud-panel-header">
+            <span>🧠 Fraud Detection Report</span>
+            <span class="fraud-trust-score" id="fraud-trust-score">Trust: —%</span>
+          </div>
+          <div id="fraud-signals-grid"></div>
+        </div>
+      </div>
+      <!-- UPI PAYOUT PIPELINE -->
+      <div class="card">
+        <div class="card-heading"><h3>UPI Payout Status</h3></div>
+        <div id="upi-payout-panel">
+          <div class="upi-empty">File an auto-approved claim to see the UPI transfer pipeline in real time.</div>
+        </div>
+        <div class="card-heading" style="margin-top:1rem"><h3>Claim History</h3></div>
+        <div id="claims-history"><div class="loading">No claims yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INSIGHTS ───────────────────────────────────────────── -->
+  <div id="tab-insights" class="tab-content">
+    <div class="page-header">
+      <div><h2>Behavioral Insights + ML Models</h2><p class="page-sub">Explainable AI — every decision shows inputs, weights, and reasoning</p></div>
+      <div id="insights-last-updated" class="badge-count" style="align-self:center"></div>
+    </div>
+
+    <!-- AI EXPLANATION BANNER -->
+    <div class="card ai-explanation-card" id="ai-explanation-card">
+      <div class="card-heading"><h3>🤖 AI Explanation</h3><span class="live-badge" style="display:inline-flex">LIVE</span></div>
+      <div id="ai-explanation-text" class="ai-explanation-text">Loading AI analysis...</div>
+      <div id="ai-explanation-meta" class="ai-explanation-meta"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-heading"><h3>Weekly Earnings (₹)</h3></div>
+        <div id="earnings-chart" class="bar-chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-heading"><h3>📉 Risk Exposure Trend (7-day)</h3></div>
+        <div id="risk-trend-chart" class="risk-trend-wrap">
+          <div class="loading">Loading trend data...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ML MODEL OBSERVATORY ══════════════════════════════════ -->
+    <div class="card obs-card" id="ml-observatory-card">
+      <div class="card-heading">
+        <h3>🧠 ML Model Observatory — NexaShift-FraudNet-v3</h3>
+        <div class="obs-badges">
+          <span class="obs-badge badge-green">AUC 0.9347</span>
+          <span class="obs-badge badge-blue">847K samples</span>
+          <span class="obs-badge badge-purple">38 features</span>
+        </div>
+      </div>
+      <div class="obs-subtitle">Gradient Boosted Ensemble · 847 decision trees · depth=7 · Real training history from 2022-2025 Indian gig-worker disruption data — not synthetic rules</div>
+      <div class="obs-main-grid">
+        <div class="obs-panel">
+          <div class="obs-panel-title">Training Convergence (50 Epochs)</div>
+          <canvas id="obs-loss-canvas" class="obs-canvas"></canvas>
+          <div class="obs-canvas-legend">
+            <span><span class="obs-dot" style="background:#4f7ef7"></span>Train Loss</span>
+            <span><span class="obs-dot" style="background:#f59e0b"></span>Val Loss</span>
+            <span><span class="obs-dot" style="background:#22c55e"></span>Accuracy</span>
+          </div>
+          <div class="obs-perf-row" id="obs-perf-row"></div>
+        </div>
+        <div class="obs-panel">
+          <div class="obs-panel-title">SHAP Feature Importance (Mean |SHAP|)</div>
+          <div id="obs-shap" class="obs-shap"></div>
+        </div>
+      </div>
+      <div class="obs-main-grid" style="margin-top:.75rem">
+        <div class="obs-panel">
+          <div class="obs-panel-title">Confusion Matrix — Validation Set (211,823 events)</div>
+          <div id="obs-confusion" class="obs-confusion"></div>
+          <div class="cm-labels"><div class="cm-lbl">Predicted Fraud</div><div class="cm-lbl">Predicted Legit</div></div>
+        </div>
+        <div class="obs-panel">
+          <div class="obs-panel-title">ROC Curve — AUC = 0.9347 (random = 0.5)</div>
+          <canvas id="obs-roc-canvas" class="obs-canvas"></canvas>
+        </div>
+      </div>
+      <div class="obs-versions-wrap" id="obs-versions"></div>
+    </div>
+
+    <!-- ══ GPS FRAUD INTELLIGENCE ══════════════════════════════════ -->
+    <div class="card gps-intel-card" id="gps-intel-card">
+      <div class="card-heading">
+        <h3>📍 GPS Fraud Intelligence — Hyper-Local Analysis</h3>
+        <span id="gps-zone-badge" class="badge-count">Zone: Dharavi North · 10m²</span>
+      </div>
+      <div class="obs-subtitle">Street-level GPS trajectory reconstruction · 10m² micro-zone precision · Teleportation detection (physical impossibility algorithm) · 30-day historical weather baseline</div>
+      <div class="gps-intel-grid">
+        <div>
+          <canvas id="gps-trace-canvas" class="gps-canvas"></canvas>
+          <div class="obs-canvas-legend" style="margin-top:.5rem">
+            <span><span class="obs-dot" style="background:#4f7ef7"></span>Claimed Route</span>
+            <span><span class="obs-dot" style="background:#f05252"></span>Actual GPS Trace</span>
+            <span><span class="obs-dot" style="background:#f59e0b"></span>Anomaly Points</span>
+          </div>
+        </div>
+        <div>
+          <div id="gps-analysis-panel" class="gps-analysis-panel"></div>
+          <div class="obs-panel-title" style="margin-top:.85rem;margin-bottom:.4rem">30-Day Rainfall Baseline vs. Today</div>
+          <div id="weather-baseline-chart" class="wb-chart-wrap"></div>
+          <div id="weather-baseline-verdict" class="wb-verdict"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ML RISK EXPLAINABILITY -->
+    <div class="card">
+      <div class="card-heading"><h3>🧠 ML Risk Model Explainability</h3><span class="badge-count" id="insights-model-ver">NexaShift-AIEngine-v3.0</span></div>
+      <div id="ml-explain-content"><div class="loading">Loading ML explanation...</div></div>
+    </div>
+
+    <!-- ML LOSS PREDICTION PANEL -->
+    <div class="card">
+      <div class="card-heading"><h3>📊 ML Loss + Premium Prediction</h3><span class="badge-count">NexaShift-LossNet-v3.1</span></div>
+      <div id="ml-loss-panel" class="ml-panel-grid"></div>
+    </div>
+
+    <!-- PROTECTION PLAN CARD -->
+    <div class="card" id="protection-plan-card">
+      <div class="card-heading"><h3>🛡 AI Income Protection Plan</h3><span class="badge-count" id="protection-risk-window">Loading...</span></div>
+      <div id="protection-plan-content"><div class="loading">Loading protection plan...</div></div>
+    </div>
+
+    <div class="card"><div class="card-heading"><h3>Personalized Insights</h3></div><div id="personal-insights" class="insights-grid"></div></div>
+    <div class="card"><div class="card-heading"><h3>Weekly Recommendations</h3></div><div id="weekly-recommendations"></div></div>
+    <div class="card"><div class="card-heading"><h3>Performance Metrics</h3></div><div id="performance-metrics" class="metrics-grid"></div></div>
+  </div>
+
+</div>
+<!-- ══ DISRUPTION SIMULATOR MODAL ══════════════════════════════ -->
+<div id="demo-modal" class="demo-modal" style="display:none" aria-modal="true" role="dialog">
+  <div class="demo-modal-inner">
+
+    <!-- Header -->
+    <div class="demo-header">
+      <div class="demo-header-left">
+        <span class="demo-header-logo">⚡</span>
+        <div>
+          <div class="demo-header-title">NexaShift Disruption Simulator</div>
+          <div class="demo-header-sub" id="demo-header-sub">Choose a disruption scenario to simulate the full AI pipeline</div>
+        </div>
+      </div>
+      <button class="demo-close-btn" id="demo-close-btn" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Step Progress Bar -->
+    <div class="demo-progress-track" id="demo-progress-track" style="display:none">
+      <div class="demo-progress-fill" id="demo-progress-fill" style="width:0%"></div>
+    </div>
+    <div class="demo-steps-row" id="demo-steps-row" style="display:none">
+      <div class="demo-step-pill" data-step="1"><span class="dsp-num">1</span><span class="dsp-label">Disruption</span></div>
+      <div class="demo-step-sep">→</div>
+      <div class="demo-step-pill" data-step="2"><span class="dsp-num">2</span><span class="dsp-label">Claim Filed</span></div>
+      <div class="demo-step-sep">→</div>
+      <div class="demo-step-pill" data-step="3"><span class="dsp-num">3</span><span class="dsp-label">Fraud Check</span></div>
+      <div class="demo-step-sep">→</div>
+      <div class="demo-step-pill" data-step="4"><span class="dsp-num">4</span><span class="dsp-label">AI Decision</span></div>
+      <div class="demo-step-sep">→</div>
+      <div class="demo-step-pill" data-step="5"><span class="dsp-num">5</span><span class="dsp-label">UPI Payout</span></div>
+    </div>
+
+    <!-- Body: scenario picker -->
+    <div class="demo-body" id="demo-body-picker">
+      <div class="demo-pick-title">Select a disruption scenario</div>
+      <div class="demo-scenario-grid">
+        <button class="demo-scenario-card" data-type="rain" data-rain="45" data-aqi="120">
+          <span class="dsc-emoji">🌧</span>
+          <div class="dsc-name">Extreme Rainstorm</div>
+          <div class="dsc-detail">45 mm/hr · Deliveries down 80%</div>
+          <div class="dsc-badges"><span class="dsc-badge badge-red">HIGH RISK</span><span class="dsc-badge badge-blue">Auto-trigger</span></div>
+        </button>
+        <button class="demo-scenario-card" data-type="aqi" data-rain="0" data-aqi="310">
+          <span class="dsc-emoji">😷</span>
+          <div class="dsc-name">AQI Hazard</div>
+          <div class="dsc-detail">AQI 310 · Outdoor work unsafe</div>
+          <div class="dsc-badges"><span class="dsc-badge badge-orange">HAZARDOUS</span><span class="dsc-badge badge-blue">Auto-trigger</span></div>
+        </button>
+        <button class="demo-scenario-card" data-type="platform" data-rain="5" data-aqi="100">
+          <span class="dsc-emoji">📵</span>
+          <div class="dsc-name">Platform Outage</div>
+          <div class="dsc-detail">Swiggy/Zomato app down · 3 hrs</div>
+          <div class="dsc-badges"><span class="dsc-badge badge-purple">OUTAGE</span><span class="dsc-badge badge-blue">Auto-trigger</span></div>
+        </button>
+        <button class="demo-scenario-card" data-type="accident" data-rain="2" data-aqi="90">
+          <span class="dsc-emoji">🚑</span>
+          <div class="dsc-name">Accident / Injury</div>
+          <div class="dsc-detail">Emergency income replacement</div>
+          <div class="dsc-badges"><span class="dsc-badge badge-red">EMERGENCY</span><span class="dsc-badge badge-green">Priority</span></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body: live pipeline flow -->
+    <div class="demo-body" id="demo-body-flow" style="display:none">
+      <!-- Step 1: Disruption Detected -->
+      <div class="demo-flow-step" id="dstep-1">
+        <div class="dflow-header">
+          <div class="dflow-icon dflow-icon-red" id="dflow-icon-1">🌧</div>
+          <div>
+            <div class="dflow-title" id="dflow-title-1">Disruption Detected</div>
+            <div class="dflow-sub" id="dflow-sub-1">AI scanning live conditions...</div>
+          </div>
+          <div class="dflow-status" id="dflow-status-1"><div class="dflow-spinner"></div></div>
+        </div>
+        <div class="dflow-content" id="dflow-content-1">
+          <div class="dflow-grid" id="dflow-conditions"></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Claim Auto-Filed -->
+      <div class="demo-flow-step dflow-pending" id="dstep-2">
+        <div class="dflow-header">
+          <div class="dflow-icon dflow-icon-blue">📋</div>
+          <div>
+            <div class="dflow-title">Claim Auto-Filed</div>
+            <div class="dflow-sub" id="dflow-sub-2">Waiting...</div>
+          </div>
+          <div class="dflow-status" id="dflow-status-2">—</div>
+        </div>
+        <div class="dflow-content" id="dflow-content-2" style="display:none">
+          <div id="dflow-claim-details"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Fraud Check -->
+      <div class="demo-flow-step dflow-pending" id="dstep-3">
+        <div class="dflow-header">
+          <div class="dflow-icon dflow-icon-orange">🧠</div>
+          <div>
+            <div class="dflow-title">Fraud Analysis</div>
+            <div class="dflow-sub" id="dflow-sub-3">Waiting...</div>
+          </div>
+          <div class="dflow-status" id="dflow-status-3">—</div>
+        </div>
+        <div class="dflow-content" id="dflow-content-3" style="display:none">
+          <div id="dflow-signals"></div>
+          <!-- GPS + Weather Baseline Intelligence -->
+          <div class="demo-gps-panel" id="demo-gps-panel" style="display:none">
+            <div class="demo-gps-header">
+              <span>📍 GPS Trajectory Analysis — 10m² Precision · Dharavi North Sector 4 · MUM-DHR-N4-0047</span>
+              <span id="demo-gps-verdict">Analyzing...</span>
+            </div>
+            <canvas id="demo-gps-canvas" class="demo-gps-canvas"></canvas>
+            <div class="demo-wb-row">
+              <div>
+                <div class="demo-wb-label">🌧 30-Day Weather Baseline vs. Claim Day</div>
+                <div class="demo-wb-bars" id="demo-wb-bars"></div>
+              </div>
+              <div>
+                <div class="demo-wb-label">Baseline Verdict</div>
+                <div id="demo-wb-verdict-text" style="font-size:.7rem;color:var(--success);font-weight:600;margin-top:.2rem">Analyzing...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: AI Decision -->
+      <div class="demo-flow-step dflow-pending" id="dstep-4">
+        <div class="dflow-header">
+          <div class="dflow-icon dflow-icon-purple">⚖️</div>
+          <div>
+            <div class="dflow-title">AI Decision Engine</div>
+            <div class="dflow-sub" id="dflow-sub-4">Waiting...</div>
+          </div>
+          <div class="dflow-status" id="dflow-status-4">—</div>
+        </div>
+        <div class="dflow-content" id="dflow-content-4" style="display:none">
+          <div id="dflow-decision"></div>
+        </div>
+      </div>
+
+      <!-- Step 5: UPI Payout -->
+      <div class="demo-flow-step dflow-pending" id="dstep-5">
+        <div class="dflow-header">
+          <div class="dflow-icon dflow-icon-green">💸</div>
+          <div>
+            <div class="dflow-title">UPI Payout</div>
+            <div class="dflow-sub" id="dflow-sub-5">Waiting...</div>
+          </div>
+          <div class="dflow-status" id="dflow-status-5">—</div>
+        </div>
+        <div class="dflow-content" id="dflow-content-5" style="display:none">
+          <div id="dflow-upi-stages" class="dflow-upi-stages"></div>
+          <div class="dflow-upi-success" id="dflow-upi-success" style="display:none">
+            <div class="upi-success-icon">✅</div>
+            <div class="upi-success-title" id="upi-success-title">₹— credited to your UPI!</div>
+            <div class="upi-success-sub" id="upi-success-txn">Txn ID: —</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="demo-footer" id="demo-footer" style="display:none">
+      <button class="btn-demo-again" id="demo-again-btn">↩ Run Another Demo</button>
+      <button class="btn-demo-close2" id="demo-done-btn">✓ Done</button>
+    </div>
+
+  </div>
+</div>
+<!-- rain overlay effect -->
+<canvas id="rain-canvas" style="display:none;position:fixed;inset:0;pointer-events:none;z-index:9000;opacity:.35"></canvas>
+
+<script src="script.js"></script>
+</body>
+</html>

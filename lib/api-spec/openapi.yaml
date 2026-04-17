@@ -1,0 +1,853 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: NexaShift AI Earnings Command Center API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: User registration and auth
+  - name: policy
+    description: Insurance policy management
+  - name: claims
+    description: Claims processing
+  - name: triggers
+    description: Environmental triggers
+  - name: simulation
+    description: What-if simulation engine
+  - name: decisions
+    description: AI daily plan and decision engine
+  - name: map
+    description: Map and location data
+  - name: insights
+    description: Behavioral insights and analytics
+  - name: ai
+    description: AI explainability
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new gig worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserBody"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterUserResponse"
+
+  /policy/create:
+    post:
+      operationId: createPolicy
+      tags: [policy]
+      summary: Create a new income protection policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePolicyBody"
+      responses:
+        "201":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+
+  /policy/{userId}:
+    get:
+      operationId: getUserPolicy
+      tags: [policy]
+      summary: Get user's active policy
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+
+  /claim/process:
+    post:
+      operationId: processClaim
+      tags: [claims]
+      summary: Auto-process a claim (zero-touch)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimRequestBody"
+      responses:
+        "200":
+          description: Claim processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimResult"
+
+  /claims/{userId}:
+    get:
+      operationId: getUserClaims
+      tags: [claims]
+      summary: Get claim history for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Claims list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Claim"
+
+  /triggers:
+    get:
+      operationId: getTriggers
+      tags: [triggers]
+      summary: Get active environmental triggers
+      responses:
+        "200":
+          description: Active triggers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggersResponse"
+
+  /simulate:
+    get:
+      operationId: simulateScenario
+      tags: [simulation]
+      summary: What-if simulation engine
+      parameters:
+        - name: scenario
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [rain, location_change, skip_work, platform_outage, aqi_spike, heat_wave, upi_downtime]
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Simulation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationResult"
+
+  /daily-plan/{userId}:
+    get:
+      operationId: getDailyPlan
+      tags: [decisions]
+      summary: Get AI-generated daily work plan
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Daily plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPlan"
+
+  /map-data:
+    get:
+      operationId: getMapData
+      tags: [map]
+      summary: Get city-level map data with risk and demand
+      responses:
+        "200":
+          description: Map data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MapLocation"
+
+  /insights/{userId}:
+    get:
+      operationId: getUserInsights
+      tags: [insights]
+      summary: Get behavioral insights for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInsights"
+
+  /ai/explain:
+    get:
+      operationId: getAiExplanation
+      tags: [ai]
+      summary: Get AI explanation for a prediction
+      parameters:
+        - name: event
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: AI explanation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiExplanation"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [insights]
+      summary: Get aggregated dashboard summary for a user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [auth]
+      summary: List all registered users
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    RegisterUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        income:
+          type: number
+          description: Monthly income in INR
+        workType:
+          type: string
+          enum: [delivery, rideshare, freelance, domestic_help, construction]
+      required:
+        - name
+        - city
+        - income
+        - workType
+
+    RegisterUserResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        riskScore:
+          type: number
+          description: 0-100 risk score
+        premium:
+          type: number
+          description: Monthly premium in INR
+        coverage:
+          type: number
+          description: Coverage amount in INR
+        message:
+          type: string
+      required:
+        - userId
+        - name
+        - city
+        - riskScore
+        - premium
+        - coverage
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        income:
+          type: number
+        workType:
+          type: string
+        riskScore:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - city
+        - income
+        - workType
+        - riskScore
+        - createdAt
+
+    CreatePolicyBody:
+      type: object
+      properties:
+        userId:
+          type: string
+        coverageType:
+          type: string
+          enum: [basic, standard, premium]
+      required:
+        - userId
+        - coverageType
+
+    Policy:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        coverageType:
+          type: string
+        premium:
+          type: number
+        coverage:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        startDate:
+          type: string
+        nextPaymentDate:
+          type: string
+        claimsCount:
+          type: integer
+        totalPaidOut:
+          type: number
+      required:
+        - id
+        - userId
+        - coverageType
+        - premium
+        - coverage
+        - status
+        - startDate
+        - nextPaymentDate
+        - claimsCount
+        - totalPaidOut
+
+    ClaimRequestBody:
+      type: object
+      properties:
+        userId:
+          type: string
+        triggerType:
+          type: string
+          enum: [rain, aqi, heat, platform_outage, upi_downtime]
+        incomeImpact:
+          type: number
+          description: Estimated income loss in INR
+      required:
+        - userId
+        - triggerType
+        - incomeImpact
+
+    ClaimResult:
+      type: object
+      properties:
+        claimId:
+          type: string
+        status:
+          type: string
+          enum: [approved, rejected, under_review]
+        payout:
+          type: number
+        fraudScore:
+          type: number
+        trustScore:
+          type: number
+        explanation:
+          type: string
+        processingTime:
+          type: string
+      required:
+        - claimId
+        - status
+        - payout
+        - fraudScore
+        - trustScore
+        - explanation
+        - processingTime
+
+    Claim:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        triggerType:
+          type: string
+        incomeImpact:
+          type: number
+        payout:
+          type: number
+        status:
+          type: string
+        fraudScore:
+          type: number
+        explanation:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - triggerType
+        - incomeImpact
+        - payout
+        - status
+        - fraudScore
+        - explanation
+        - createdAt
+
+    TriggersResponse:
+      type: object
+      properties:
+        activeTriggers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Trigger"
+        riskLevel:
+          type: string
+          enum: [low, medium, high, critical]
+        affectedCities:
+          type: array
+          items:
+            type: string
+      required:
+        - activeTriggers
+        - riskLevel
+        - affectedCities
+
+    Trigger:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [rain, aqi, heat, platform_outage, upi_downtime]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        description:
+          type: string
+        incomeImpactPercent:
+          type: number
+        cities:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+      required:
+        - type
+        - severity
+        - description
+        - incomeImpactPercent
+        - cities
+        - isActive
+
+    SimulationResult:
+      type: object
+      properties:
+        scenario:
+          type: string
+        predictedIncome:
+          type: number
+        baseIncome:
+          type: number
+        riskPercent:
+          type: number
+        incomeDrop:
+          type: number
+        incomeDropPercent:
+          type: number
+        recommendedAction:
+          type: string
+        expectedPayout:
+          type: number
+        explanation:
+          type: string
+        confidence:
+          type: number
+          description: 0-100 confidence score
+        alternativeScenarios:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlternativeScenario"
+      required:
+        - scenario
+        - predictedIncome
+        - baseIncome
+        - riskPercent
+        - incomeDrop
+        - incomeDropPercent
+        - recommendedAction
+        - expectedPayout
+        - explanation
+        - confidence
+        - alternativeScenarios
+
+    AlternativeScenario:
+      type: object
+      properties:
+        name:
+          type: string
+        incomeChange:
+          type: number
+        action:
+          type: string
+      required:
+        - name
+        - incomeChange
+        - action
+
+    DailyPlan:
+      type: object
+      properties:
+        userId:
+          type: string
+        date:
+          type: string
+        bestWorkingHours:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkWindow"
+        highDemandZones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Zone"
+        riskWindows:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskWindow"
+        expectedEarnings:
+          type: number
+        recommendation:
+          type: string
+        weatherForecast:
+          type: string
+        topTip:
+          type: string
+      required:
+        - userId
+        - date
+        - bestWorkingHours
+        - highDemandZones
+        - riskWindows
+        - expectedEarnings
+        - recommendation
+        - weatherForecast
+        - topTip
+
+    WorkWindow:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        demandScore:
+          type: number
+        estimatedEarning:
+          type: number
+        label:
+          type: string
+      required:
+        - startTime
+        - endTime
+        - demandScore
+        - estimatedEarning
+        - label
+
+    Zone:
+      type: object
+      properties:
+        name:
+          type: string
+        demandScore:
+          type: number
+        avgEarning:
+          type: number
+        distanceKm:
+          type: number
+      required:
+        - name
+        - demandScore
+        - avgEarning
+        - distanceKm
+
+    RiskWindow:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        riskType:
+          type: string
+        severity:
+          type: string
+        advice:
+          type: string
+      required:
+        - startTime
+        - endTime
+        - riskType
+        - severity
+        - advice
+
+    MapLocation:
+      type: object
+      properties:
+        city:
+          type: string
+        lat:
+          type: number
+        lng:
+          type: number
+        riskScore:
+          type: number
+        demandScore:
+          type: number
+        avgPayout:
+          type: number
+        activeClaims:
+          type: integer
+        weather:
+          type: string
+        aqiLevel:
+          type: string
+      required:
+        - city
+        - lat
+        - lng
+        - riskScore
+        - demandScore
+        - avgPayout
+        - activeClaims
+        - weather
+        - aqiLevel
+
+    UserInsights:
+      type: object
+      properties:
+        userId:
+          type: string
+        bestEarningTime:
+          type: string
+        bestEarningDay:
+          type: string
+        riskExposure:
+          type: number
+        performanceScore:
+          type: number
+        weeklyEarnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyEarning"
+        monthlyTrend:
+          type: string
+          enum: [improving, stable, declining]
+        topRiskFactors:
+          type: array
+          items:
+            type: string
+        savingsRecommendation:
+          type: number
+      required:
+        - userId
+        - bestEarningTime
+        - bestEarningDay
+        - riskExposure
+        - performanceScore
+        - weeklyEarnings
+        - monthlyTrend
+        - topRiskFactors
+        - savingsRecommendation
+
+    DailyEarning:
+      type: object
+      properties:
+        day:
+          type: string
+        amount:
+          type: number
+        hoursWorked:
+          type: number
+      required:
+        - day
+        - amount
+        - hoursWorked
+
+    AiExplanation:
+      type: object
+      properties:
+        event:
+          type: string
+        factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExplanationFactor"
+        summary:
+          type: string
+        confidence:
+          type: number
+        historicalAccuracy:
+          type: number
+      required:
+        - event
+        - factors
+        - summary
+        - confidence
+        - historicalAccuracy
+
+    ExplanationFactor:
+      type: object
+      properties:
+        factor:
+          type: string
+        impact:
+          type: string
+        weight:
+          type: number
+        description:
+          type: string
+      required:
+        - factor
+        - impact
+        - weight
+        - description
+
+    DashboardSummary:
+      type: object
+      properties:
+        userId:
+          type: string
+        todayEarnings:
+          type: number
+        weeklyEarnings:
+          type: number
+        monthlyEarnings:
+          type: number
+        currentRiskScore:
+          type: number
+        activePolicies:
+          type: integer
+        totalClaimsThisMonth:
+          type: integer
+        totalPayoutThisMonth:
+          type: number
+        riskTrend:
+          type: string
+          enum: [improving, stable, worsening]
+        incomeProtected:
+          type: number
+        streakDays:
+          type: integer
+      required:
+        - userId
+        - todayEarnings
+        - weeklyEarnings
+        - monthlyEarnings
+        - currentRiskScore
+        - activePolicies
+        - totalClaimsThisMonth
+        - totalPayoutThisMonth
+        - riskTrend
+        - incomeProtected
+        - streakDays

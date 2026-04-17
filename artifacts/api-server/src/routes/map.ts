@@ -1,0 +1,123 @@
+import { Router, type IRouter } from "express";
+import { GetMapDataResponse } from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+const MAP_DATA = [
+  {
+    city: "Mumbai",
+    lat: 19.076,
+    lng: 72.877,
+    riskScore: 72,
+    demandScore: 95,
+    avgPayout: 3200,
+    activeClaims: 48,
+    weather: "Rain",
+    aqiLevel: "Moderate",
+  },
+  {
+    city: "Delhi",
+    lat: 28.704,
+    lng: 77.102,
+    riskScore: 68,
+    demandScore: 92,
+    avgPayout: 2800,
+    activeClaims: 61,
+    weather: "Hazy",
+    aqiLevel: "Unhealthy",
+  },
+  {
+    city: "Bengaluru",
+    lat: 12.971,
+    lng: 77.594,
+    riskScore: 45,
+    demandScore: 88,
+    avgPayout: 2400,
+    activeClaims: 29,
+    weather: "Clear",
+    aqiLevel: "Good",
+  },
+  {
+    city: "Hyderabad",
+    lat: 17.385,
+    lng: 78.486,
+    riskScore: 52,
+    demandScore: 84,
+    avgPayout: 2100,
+    activeClaims: 33,
+    weather: "Partly Cloudy",
+    aqiLevel: "Moderate",
+  },
+  {
+    city: "Chennai",
+    lat: 13.083,
+    lng: 80.27,
+    riskScore: 58,
+    demandScore: 79,
+    avgPayout: 1900,
+    activeClaims: 22,
+    weather: "Hot",
+    aqiLevel: "Good",
+  },
+  {
+    city: "Pune",
+    lat: 18.521,
+    lng: 73.856,
+    riskScore: 41,
+    demandScore: 75,
+    avgPayout: 1800,
+    activeClaims: 17,
+    weather: "Cloudy",
+    aqiLevel: "Good",
+  },
+  {
+    city: "Kolkata",
+    lat: 22.572,
+    lng: 88.363,
+    riskScore: 63,
+    demandScore: 71,
+    avgPayout: 1600,
+    activeClaims: 38,
+    weather: "Humid",
+    aqiLevel: "Moderate",
+  },
+  {
+    city: "Ahmedabad",
+    lat: 23.022,
+    lng: 72.571,
+    riskScore: 55,
+    demandScore: 68,
+    avgPayout: 1500,
+    activeClaims: 24,
+    weather: "Clear",
+    aqiLevel: "Good",
+  },
+  {
+    city: "Jaipur",
+    lat: 26.911,
+    lng: 75.787,
+    riskScore: 48,
+    demandScore: 62,
+    avgPayout: 1400,
+    activeClaims: 15,
+    weather: "Hot",
+    aqiLevel: "Moderate",
+  },
+  {
+    city: "Surat",
+    lat: 21.17,
+    lng: 72.831,
+    riskScore: 38,
+    demandScore: 65,
+    avgPayout: 1350,
+    activeClaims: 11,
+    weather: "Clear",
+    aqiLevel: "Good",
+  },
+];
+
+router.get("/map-data", async (_req, res): Promise<void> => {
+  res.json(GetMapDataResponse.parse(MAP_DATA));
+});
+
+export default router;
