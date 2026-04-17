@@ -237,4 +237,4 @@ http://localhost:5000
 
 ---
 
-*Built for DevTrails Hackathon. Focused on real-world impact, AI-driven decisions, and scalable design.*
+Built for DevTrails Hackathon. Focused on real-world impact, AI-driven decisions, and scalable design.
