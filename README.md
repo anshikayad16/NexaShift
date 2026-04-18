@@ -7,7 +7,7 @@
 
 ## 📌 Pitch Deck
 
-[View Pitch Deck](your-drive-link-here)
+https://drive.google.com/file/d/1WBYE5CZtwUQIenqdHRNh_ilT884Ercmy/view?usp=sharing
 
 ---
 
